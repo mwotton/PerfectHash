@@ -1,0 +1,2 @@
+This is a thin haskell wrapper around the CMPH library, obtainable at http://cmph.sf.net.
+I assume you have it installed in /usr/local/lib.
