@@ -2,10 +2,10 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 import Random
-import Microbench
+import HackedMicrobench -- small bugfix - use Integer rather than Int. original author unavailable for reports
 import Control.Exception
 import Data.List as List
-import PerfectHash
+import Data.PerfectHash as PerfectHash
 import Maybe
 import qualified Data.ByteString.Char8 as S
 

@@ -1,0 +1,29 @@
+Name:           PerfectHash
+Version:        0.1
+Cabal-Version:  >= 1.2
+License:	BSD3
+License-File:   LICENSE
+Build-Type:     Simple
+Author:		Mark Wotton <mwotton@gmail.com>
+Maintainer:	Mark Wotton <mwotton@gmail.com>
+Category:	Data, Data Structures
+Synopsis:	An efficient finite map from bytestrings to values.
+Description:    An efficient finite map from bytestrings to values.
+		Insertion is not supported (by design): this is just a binding
+		to the C-based CMPH library (http://cmph.sf.net). Only fromList
+		and lookup operations are supported, but in many circumstances
+		this is all that's required.
+Library
+        Exposed-Modules: Data.PerfectHash, HackedMicrobench
+        ghc-options:    -auto-all -funbox-strict-fields -fvia-C -optc-O2 
+        c-sources: stub.c
+        extra-lib-dirs: /usr/local/lib/
+        extra-libraries: cmph
+        build-depends:  base, haskell98, containers, bytestring, digest,array, time
+
+Executable benchmark
+        Executable:     benchmark
+        Main-Is:        benchmark.hs
+        extra-lib-dirs: /usr/local/lib/
+        extra-libraries: cmph
+        c-sources: stub.c stub.h

@@ -1,7 +1,5 @@
-FIXME: what happ
-
 > {-# LANGUAGE ForeignFunctionInterface, ScopedTypeVariables, EmptyDataDecls #-}
-> module PerfectHash ( PerfectHash, fromList, lookup ) where
+> module Data.PerfectHash ( PerfectHash, fromList, lookup ) where
 
 > import Array
 > import Data.Array.IO
@@ -29,6 +27,7 @@ standard idiom for an opaque type
 >                                    checksums :: Array Word64 Word32,
 >                                    hashFunc :: S.ByteString -> Word64 }
 
+pretty certain this could be improved
 
 > use_hash a str = unsafePerformIO $ S.useAsCString str 
 >                  (\cstr -> return (fromIntegral $ c_cmph_search a cstr (fromIntegral $ S.length str)))
