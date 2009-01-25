@@ -76,7 +76,7 @@ instance Microbenchable (IO ()) where
 
 -- This was chosen totally arbitrarily.  Perhaps it would be better to make it
 -- a parameter, or use some sort of real statistical test.
-microbenchTime = 1.0
+microbenchTime = 5.0
 
 -- |@microbench description target@ probes target with different parameters
 -- until it's ran enough iterations to have a good estimate at the rate per

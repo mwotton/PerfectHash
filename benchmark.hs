@@ -19,4 +19,4 @@ main = do
  words <- evaluate $ S.lines str
  source :: [(S.ByteString, Integer)] <- evaluate $ zip words [1..]
  perfect <- evaluate $ PerfectHash.fromList source
- microbench "perfect lookup" (perfect_lookup   perfect words)
+ {-# SCC "mb_lookup" #-} microbench "perfect lookup" (perfect_lookup   perfect words)

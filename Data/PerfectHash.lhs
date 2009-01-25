@@ -10,6 +10,7 @@
 > import Prelude hiding (lookup)
 > import System.IO.Unsafe
 > import qualified Data.ByteString.Char8 as S
+> import qualified Data.ByteString.Unsafe as Unsafe
 > import Data.Array.Storable
 > import Data.Digest.CRC32 (crc32)
  
@@ -29,8 +30,8 @@ standard idiom for an opaque type
 
 pretty certain this could be improved
 
-> use_hash a str = unsafePerformIO $ S.useAsCString str 
->                  (\cstr -> return (fromIntegral $ c_cmph_search a cstr (fromIntegral $ S.length str)))
+> use_hash a str = {-# SCC "use_hash" #-}  unsafePerformIO $ Unsafe.unsafeUseAsCStringLen str
+>                  (\(cstr,i) -> return (fromIntegral $ c_cmph_search a cstr (fromIntegral i)))
 
 This could do with being broken up a little, probably
 
@@ -63,8 +64,10 @@ This could do with being broken up a little, probably
 
 > lookup :: PerfectHash a -> S.ByteString -> Maybe a
 > lookup hash bs
->     | low <= index && high >= index && (crc32 bs) == (checksums hash) ! index = Just (arr ! index)
->     | otherwise                     = Nothing
->     where index = hashFunc hash bs
+>     | check     = Just (arr ! index)
+>     | otherwise = Nothing
+>     where index = {-# SCC "hash_only" #-} hashFunc hash bs
 >           (low, high) = bounds arr
 >           arr = store hash
+>           check = {-# SCC "check" #-} low <= index && high >= index && 
+>                   {-# SCC "crcs" #-} (crc32 bs) == (checksums hash) ! index
