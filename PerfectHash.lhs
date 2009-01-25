@@ -1,9 +1,7 @@
-basic model here: mar
+FIXME: what happ
 
-> {-# LANGUAGE ForeignFunctionInterface, ScopedTypeVariables #-}
+> {-# LANGUAGE ForeignFunctionInterface, ScopedTypeVariables, EmptyDataDecls #-}
 > module PerfectHash ( PerfectHash, fromList, lookup ) where
-
-Arguably the FFI stuff should be in a separate file, but let's keep it simple for the moment.
 
 > import Array
 > import Data.Array.IO
@@ -12,52 +10,62 @@ Arguably the FFI stuff should be in a separate file, but let's keep it simple fo
 > import Foreign.C.Types
 > import Foreign.Marshal.Array
 > import Prelude hiding (lookup)
-> import System.IO.Unsafe -- naughty!
+> import System.IO.Unsafe
 > import qualified Data.ByteString.Char8 as S
-> import Debug.Trace
+> import Data.Array.Storable
+> import Data.Digest.CRC32 (crc32)
+ 
+Arguably the FFI stuff should be in a separate file, but let's keep it simple for the moment.
 
-> foreign import ccall safe "stub.h stub_hash" c_stub_hash   :: Ptr ForeignHash -> CString -> CULong
-> foreign import ccall safe "stub.h build_hash" c_build_hash :: Ptr CString -> CInt -> IO (Ptr ForeignHash)
+> foreign import ccall unsafe "cmph.h cmph_search" c_cmph_search :: Ptr ForeignHash -> CString -> CInt -> CULong
+> foreign import ccall unsafe "stub.h build_hash" c_build_hash   :: Ptr CString -> CInt -> IO (Ptr ForeignHash)
+> foreign import ccall unsafe "string.h strdup" c_strdup         :: CString -> IO CString
 
-> type ForeignHash = ()
+standard idiom for an opaque type
 
-> data PerfectHash a = PerfectHash { store :: Array Word64 a,
+> data ForeignHash
+
+> data PerfectHash a = PerfectHash { store :: Array Word64  a,
+>                                    checksums :: Array Word64 Word32,
 >                                    hashFunc :: S.ByteString -> Word64 }
 
 
-> use_hash a str = unsafePerformIO $ S.useAsCString str (\cstr -> return (fromIntegral $ c_stub_hash a cstr))
+> use_hash a str = unsafePerformIO $ S.useAsCString str 
+>                  (\cstr -> return (fromIntegral $ c_cmph_search a cstr (fromIntegral $ S.length str)))
 
-> conv :: S.ByteString -> IO CString
-> conv x = S.useAsCString x (return)
+This could do with being broken up a little, probably
 
-
-> writeToArray :: Storable a => [a] -> IO (Ptr a)
-> writeToArray l = do
->   ptr <- mallocBytes (4 * length l)
->   mapM_ (\(index,element) -> pokeByteOff ptr (4*index) element ) (zip [0..] l)
->   return ptr
-
-
-                   withArray2 cstrs $ \c_input -> do
-
-> fromList :: Show a => [(S.ByteString, a)] -> IO (PerfectHash a)
-> fromList ls = trace ("building hash: first ten are " ++ show (take 10 ls))  $ do
->                   cstrs <- mapM (conv . fst) ls
->                   ptr <- writeToArray cstrs
->                   let len = length cstrs
->                   cmph <- c_build_hash  ptr (fromIntegral len)
->                   let bounds :: (Word64, Word64) = (fromIntegral 0, fromIntegral len)
+> fromList :: Show a => [(S.ByteString, a)] -> PerfectHash a
+> fromList ls = unsafePerformIO $ do
+>                   let len = length ls
+>                   arr <- newArray_ (0, len-1)
+>                   mapM_ (\(i,(bs, val)) ->
+>                          S.useAsCString bs $ \cstr -> do
+>                            newPtr <- c_strdup cstr
+>                            writeArray arr i newPtr)
+>                         (zip [0..] ls)
+>                   cmph <- withStorableArray arr $ \ptr -> c_build_hash ptr (fromIntegral len)
+>                   let bounds :: (Word64, Word64) = (fromIntegral 0, fromIntegral len - 1)
+>                   print bounds
 >                   arr <- newArray_ bounds :: IO (IOArray Word64 a)
+>                   checksums <- newArray_ bounds :: IO (IOArray Word64 Word32)
 >                   let hashFunc = use_hash cmph
->                   mapM_ (\(str,e) -> writeArray arr (hashFunc str) e) ls
->                   immutable <- freeze arr
->                   return PerfectHash { store = immutable, hashFunc = hashFunc }
+>                   mapM_ (\(str,e) -> do
+>                          let index = hashFunc str
+>                          writeArray arr index e
+>                          writeArray checksums index (crc32 str))
+>                                      ls
+>                   i_arr <- freeze arr
+>                   i_checksums <- freeze checksums
+>                   return PerfectHash { store = i_arr, 
+>                                        hashFunc = hashFunc, 
+>                                        checksums = i_checksums }
 >                 
 
 > lookup :: PerfectHash a -> S.ByteString -> Maybe a
 > lookup hash bs
->     | low <= index && high > index = Just (arr ! index)
->     | otherwise                     = trace (S.unpack bs)  Nothing
+>     | low <= index && high >= index && (crc32 bs) == (checksums hash) ! index = Just (arr ! index)
+>     | otherwise                     = Nothing
 >     where index = hashFunc hash bs
 >           (low, high) = bounds arr
 >           arr = store hash
