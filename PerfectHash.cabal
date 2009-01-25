@@ -32,3 +32,12 @@ Executable benchmark
         extra-libraries: cmph
         c-sources: stub.c
         includes: stub.h
+
+Executable test
+        Executable:     test
+        Main-Is:        t/00_correctness.hs
+        extra-lib-dirs: /usr/local/lib/
+        extra-libraries: cmph
+        c-sources: stub.c
+        includes: stub.h
+        build-depends:  QuickCheck

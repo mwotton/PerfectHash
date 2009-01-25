@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleInstances, IncoherentInstances, OverlappingInstances  #-}
 
-import PerfectHash
+import Data.PerfectHash as PerfectHash
 import Test.QuickCheck
 import List hiding (lookup)
 import Maybe
