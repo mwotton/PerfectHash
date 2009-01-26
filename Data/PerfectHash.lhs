@@ -1,5 +1,5 @@
 > {-# LANGUAGE ForeignFunctionInterface, ScopedTypeVariables, EmptyDataDecls, BangPatterns #-}
-> module Data.PerfectHash ( PerfectHash, fromList, lookup ) where
+> module Data.PerfectHash ( PerfectHash, fromList, lookup, lookupByIndex ) where
 
 > import Array
 > import Data.Array.IO
@@ -14,19 +14,20 @@
 > import Data.Array.Storable
 > import Data.Digest.CRC32 (crc32)
 > import Data.Digest.Adler32 (adler32)
+> import Control.Monad(guard)
  
 Arguably the FFI stuff should be in a separate file, but let's keep it simple for the moment.
 
 > foreign import ccall unsafe "cmph.h cmph_search" c_cmph_search :: Ptr ForeignHash -> CString -> CInt -> CULong
 > foreign import ccall unsafe "stub.h build_hash" c_build_hash   :: Ptr CString -> CInt -> IO (Ptr ForeignHash)
 > foreign import ccall unsafe "string.h strdup" c_strdup         :: CString -> IO CString
-> foreign import ccall unsafe "string.h strcmp" c_strcmp         :: CString -> CString -> IO CInt
+> foreign import ccall unsafe "string.h strncmp" c_strncmp         :: CString -> CString -> CInt -> IO CInt
 
 standard idiom for an opaque type
 
 > data ForeignHash
 
-> data PerfectHash a = PerfectHash { store     :: !(Array Word32 (a,CString)),
+> data PerfectHash a = PerfectHash { store     :: !(Array.Array Word32 (a,CString)),
 >                                    hashFunc  :: !(S.ByteString -> Word32) }
 
 pretty certain this could be improved
@@ -51,7 +52,6 @@ This could do with being broken up a little, probably
 >                         (zip [0..] ls)
 >                   cmph <- withStorableArray arr $ \ptr -> c_build_hash ptr (fromIntegral len)
 >                   let bounds :: (Word32, Word32) = (fromIntegral 0, fromIntegral len - 1)
->                   print bounds
 >                   arr <- newArray_ bounds :: IO (IOArray Word32 a)
 >                   checksums <- newArray_ bounds :: IO (IOArray Word32 Word32)
 >                   let hashFunc = use_hash cmph
@@ -73,11 +73,19 @@ This could do with being broken up a little, probably
 >     | check     = Just e
 >     | otherwise = Nothing
 >     where index = {-# SCC "hash_only" #-} hashFunc hash bs
->           (!low, !high) = bounds arr
+>           (!low, !high) = Array.bounds arr
 >           !arr = store hash
 >           (e, str) = arr ! index
 >           !check = {-# SCC "check" #-} low <= index && high >= index && 
->                   {-# SCC "bs_check" #-} unsafePerformIO $ Unsafe.unsafeUseAsCString bs (\cstr -> do 
->                                                                                                   res <- c_strcmp str cstr
->                                                                                                   return (res == 0)
->                                                                                          )
+>                   {-# SCC "bs_check" #-} unsafePerformIO $ Unsafe.unsafeUseAsCStringLen bs (\(cstr,len) -> 
+>                                               c_strncmp str cstr (fromIntegral len) >>= \res -> return (res == 0))
+
+sometimes it's convenient to have direct access, but this should probably be seen as a
+slightly devious use case.
+
+> lookupByIndex :: PerfectHash a -> Word32 -> Maybe S.ByteString
+> lookupByIndex hash index = do
+>                guard $ low <= index && high >= index
+>                return $ unsafePerformIO $ S.packCString $ snd $  arr ! index
+>   where (!low, !high) = bounds arr
+>         arr = store hash
