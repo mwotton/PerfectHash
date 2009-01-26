@@ -1,12 +1,14 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleInstances, IncoherentInstances, OverlappingInstances  #-}
 
-import Data.PerfectHash as PerfectHash
-import Test.QuickCheck
-import List hiding (lookup)
-import Maybe
-import Prelude hiding (lookup)
 import qualified Data.ByteString.Char8 as S
+import qualified Data.Map as Map
+import qualified Data.PerfectHash as PerfectHash
 import Debug.Trace
+import Test.HUnit
+import List 
+import Maybe
+import Test.QuickCheck
+
 
 newtype Blub = Blub ([S.ByteString],[S.ByteString])
     deriving (Show, Read)
@@ -15,26 +17,33 @@ newtype Bar = Bar [S.ByteString]
     deriving (Show, Read)
 
 
+-- would be nice to have a reasonable way of generating random strings, then i could 
+-- move this to quickcheck and get rid of the dependence on /usr/share/dict/words
 
-instance Arbitrary Blub where
-  arbitrary     = return $ Blub $ List.splitAt ((length uniques) `div` 2) uniques 
-    where   uniques = map ( S.pack ) ["foo", "bar", "baz"]
-    
-instance Arbitrary Bar where
-  arbitrary     = return $ Bar $ map ( S.pack ) ["foo", "bar", "baz", "boo"]
+halves :: [a] -> ([a], [a])
+halves ls = List.splitAt ((length ls) `div` 2) ls
 
-prop_Working :: Bar -> Bool
-prop_Working (Bar ls) = all (\x -> Just x == lookup h x) ls
-    where h = fromList $ zip ls ls
+big_test ws = TestList [TestLabel "Successful lookup"          $ TestList successTests, 
+                        TestLabel "Faithful report of absence" $ TestList absenceTests]
+  where hash    = PerfectHash.fromList al
+        datamap = Map.fromList al
+        al = zip source [0..]
+        (source, orphans) =  halves $ sortedNub ws
+        absenceTests = map (\w -> TestCase $
+                                  assertEqual "shouldn't find it"
+                                                  (PerfectHash.lookup hash w)
+                                                  Nothing
+                           ) orphans
+        successTests = map (\w -> TestCase $
+                                  assertEqual "should find it: same result as Data.Map"
+                                                  (Map.lookup w datamap )
+                                                  (PerfectHash.lookup hash w)
 
-prop_Honest :: Blub ->  Bool
-prop_Honest (Blub (uniques,targets)) = all (\x -> trace (show x) (Maybe.isNothing x)) results
-    where h = fromList $ zip uniques uniques
-          results = map (\x -> trace (show x) $ PerfectHash.lookup h x) targets
+                           ) source
+        
+sortedNub xs = map head $ group $ sort xs
 
 main = do
-  --l <- S.readFile "/usr/share/dict/words";
-  --res <- prop_Honest (S.lines l)
-  --print res
-  quickCheck prop_Honest
-  quickCheck prop_Working
+  l <- S.readFile "/usr/share/dict/words";
+  runTestTT (big_test $ take 10000 $ S.lines l)
+  
