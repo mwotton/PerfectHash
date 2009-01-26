@@ -8,7 +8,7 @@ Author:		Mark Wotton <mwotton@gmail.com>
 Maintainer:	Mark Wotton <mwotton@gmail.com>
 Category:	Data, Data Structures
 Stability:	Experimental
-extra-source-files: stub.h
+extra-source-files: stub.h, README, TODO
 bug-reports:	mailto:mwotton@gmail.com
 Synopsis:	A perfect hashing library for mapping bytestrings to values.
 Description:    A perfect hashing library for mapping bytestrings to values.
@@ -33,6 +33,15 @@ Executable benchmark
         c-sources: stub.c
         includes: stub.h
 
+Executable benchmark_trie
+        Executable:     benchmark_trie
+        Main-Is:        benchmark_trie.hs
+        extra-lib-dirs: /usr/local/lib/
+        extra-libraries: cmph
+        c-sources: stub.c
+        includes: stub.h
+        build-depends: bytestring-trie
+
 Executable test
         Executable:     test
         Main-Is:        t/00_correctness.hs
@@ -40,4 +49,4 @@ Executable test
         extra-libraries: cmph
         c-sources: stub.c
         includes: stub.h
-        build-depends:  QuickCheck
+        build-depends:  QuickCheck, HUnit
