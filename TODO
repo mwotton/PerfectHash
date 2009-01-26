@@ -1,2 +1,2 @@
 - some sensible way of changing the hashing algorithm
-- free the memory afterwards
+- finalisers for C memory allocation - it probably leaks like crazy right now.
