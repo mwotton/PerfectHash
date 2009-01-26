@@ -18,7 +18,6 @@ cmph_t * build_hash(char ** vector, int nkeys) {
   monkey_debug(vector, nkeys);
 #endif
   //  fprintf(stderr, "building hash with %d keys, first is %s, last is %s\n", nkeys, *vector, vector[nkeys-1]);
-
   cmph_io_adapter_t *source = cmph_io_vector_adapter(vector, nkeys);
   //fprintf(stderr, "building adapter is %p\n", source);
   cmph_config_t *config = cmph_config_new(source);
