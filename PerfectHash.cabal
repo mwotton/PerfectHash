@@ -23,7 +23,7 @@ Library
         includes: stub.h
         extra-lib-dirs: /usr/local/lib/
         extra-libraries: cmph
-        build-depends:  base, haskell98, containers, bytestring, digest,array, time
+        build-depends:  base, haskell98, containers, bytestring, digest,array, time, binary
 
 Executable benchmark
         Executable:     benchmark
