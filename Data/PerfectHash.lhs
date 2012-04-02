@@ -1,14 +1,13 @@
 > {-# LANGUAGE ForeignFunctionInterface, ScopedTypeVariables, EmptyDataDecls, BangPatterns, TypeSynonymInstances, FlexibleInstances #-}
 > module Data.PerfectHash ( PerfectHash, fromList, lookup, lookupByIndex ) where
 
-> import Array
+> import Data.Array
 > import Data.Array.IO
 > import Foreign
 > import Foreign.C.String
 > import Foreign.C.Types
 > import Foreign.Marshal.Array
 > import Prelude hiding (lookup)
-> import System.IO.Unsafe
 > import qualified Data.ByteString.Char8 as S
 > import qualified Data.ByteString.Unsafe as Unsafe
 > import Data.Array.Storable
@@ -29,7 +28,7 @@ standard idiom for an opaque type
 
 > data ForeignHash
 
-> data PerfectHash a = PerfectHash { store     :: !(Array.Array Word32 (a,CString)),
+> data PerfectHash a = PerfectHash { store     :: !(Array Word32 (a,CString)),
 >                                    cmph      :: Ptr ForeignHash 
 >                                  }
 
@@ -95,7 +94,7 @@ This could do with being broken up a little, probably
 > lookup :: PerfectHash a -> S.ByteString -> Maybe a
 > lookup !hash !bs = guard check >> return e
 >     where index = {-# SCC "hash_only" #-} use_hash (cmph hash) bs
->           (!low, !high) = Array.bounds arr
+>           (!low, !high) = bounds arr
 >           !arr = store hash
 >           (e, str) = arr ! index
 
