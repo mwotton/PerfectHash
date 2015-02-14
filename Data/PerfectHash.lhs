@@ -5,7 +5,7 @@
 > import Data.Array.Unsafe (unsafeFreeze)
 > import System.IO.Unsafe (unsafePerformIO)
 > import Data.Array
-> import Data.Array.IO
+> import Data.Array.IO (newArray_,writeArray,IOArray)
 > import Foreign(Ptr)
 > import Foreign.C.String
 > import Foreign.C.Types
