@@ -6,7 +6,7 @@
 > import System.IO.Unsafe (unsafePerformIO)
 > import Data.Array
 > import Data.Array.IO
-> import Foreign
+> import Foreign(Ptr)
 > import Foreign.C.String
 > import Foreign.C.Types
 > import Foreign.Marshal.Array
