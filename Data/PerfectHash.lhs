@@ -1,6 +1,9 @@
 > {-# LANGUAGE ForeignFunctionInterface, ScopedTypeVariables, EmptyDataDecls, BangPatterns, TypeSynonymInstances, FlexibleInstances #-}
-> module Data.PerfectHash ( PerfectHash, fromList, lookup, lookupByIndex ) where
 
+> module Data.PerfectHash ( PerfectHash, fromList, lookup, lookupByIndex ) where
+>
+> import Data.Array.Unsafe (unsafeFreeze)
+> import System.IO.Unsafe (unsafePerformIO)
 > import Data.Array
 > import Data.Array.IO
 > import Foreign
@@ -29,7 +32,7 @@ standard idiom for an opaque type
 > data ForeignHash
 
 > data PerfectHash a = PerfectHash { store     :: !(Array Word32 (a,CString)),
->                                    cmph      :: Ptr ForeignHash 
+>                                    cmph      :: Ptr ForeignHash
 >                                  }
 
 is this even a sane thing to do?
@@ -42,7 +45,7 @@ is this even a sane thing to do?
 -- >     get = do
 -- >           size <- get
 -- >           arr <- newArray_ (0,size)
--- >           forM_ [0 .. size] $ writeArray arr 
+-- >           forM_ [0 .. size] $ writeArray arr
 -- >           store <- get
 -- >           cmph <- undefined
 -- >           return $ PerfectHash { store = store, cmph = cmph }
@@ -69,10 +72,10 @@ This could do with being broken up a little, probably
 >                   (fodder,cstr_ptrs) <- prepareCPtrs
 >                   cmph <- withStorableArray fodder $ \ptr -> c_build_hash ptr (fromIntegral len)
 >                   i_arr <- buildArray cmph cstr_ptrs
->                   return PerfectHash { store = i_arr, 
+>                   return PerfectHash { store = i_arr,
 >                                        cmph = cmph }
 
->   where prepareCPtrs = do 
+>   where prepareCPtrs = do
 >                   fodder <- newArray_ (0, len-1)
 >                   -- we make one pass over ls, then throw it away
 >                   cstr_ptrs <- mapM (\(i,(bs, val)) ->
@@ -82,13 +85,13 @@ This could do with being broken up a little, probably
 >                            return ((newPtr,fromIntegral len),val))
 >                         (zip [0..] ls)
 >                   return (fodder, cstr_ptrs)
->                          
+>
 >         buildArray cmph cstr_ptrs = do
 >                   arr <- newArray_ (fromIntegral 0, fromIntegral len - 1) :: IO (IOArray Word32 a)
 >                   mapM_ (\(cl@(cstr,len),val) -> writeArray arr (raw_hashfunc cmph cl) (val,cstr)) $ cstr_ptrs
 >                   -- we created it, we can do what we like with it...
 >                   unsafeFreeze arr
->                                
+>
 >         len = length ls
 
 > lookup :: PerfectHash a -> S.ByteString -> Maybe a
@@ -101,8 +104,8 @@ This could do with being broken up a little, probably
 basic index checking stuff plus a check that we haven't just had a hash collision - tried crc checking here
 and it turns out that strncmp is faster
 
->           !check = {-# SCC "check" #-} low <= index && high >= index && 
->                   {-# SCC "bs_check" #-} unsafePerformIO $ Unsafe.unsafeUseAsCStringLen bs (\(cstr,len) -> 
+>           !check = {-# SCC "check" #-} low <= index && high >= index &&
+>                   {-# SCC "bs_check" #-} unsafePerformIO $ Unsafe.unsafeUseAsCStringLen bs (\(cstr,len) ->
 >                                               c_strncmp str cstr (fromIntegral len) >>= \res -> return (res == 0))
 
 >           use_hash a str = {-# SCC "use_hash" #-}  unsafePerformIO $ Unsafe.unsafeUseAsCStringLen str
