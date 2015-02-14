@@ -13,7 +13,7 @@
 > import Prelude hiding (lookup)
 > import qualified Data.ByteString.Char8 as S
 > import qualified Data.ByteString.Unsafe as Unsafe
-> import Data.Array.Storable
+> import Data.Array.Storable (withStorableArray)
 > import Data.Binary
 > import Data.Digest.CRC32 (crc32)
 > import Data.Digest.Adler32 (adler32)
