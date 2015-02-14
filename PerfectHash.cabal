@@ -16,6 +16,8 @@ Description:    A perfect hashing library for mapping bytestrings to values.
 		to the C-based CMPH library (http://cmph.sf.net). Only fromList
 		and lookup operations are supported, but in many circumstances
 		this is all that's required.
+
+                CI at https://travis-ci.org/mwotton/PerfectHash
 Library
         Exposed-Modules: Data.PerfectHash, HackedMicrobench
         ghc-options:    -auto-all -funbox-strict-fields -fvia-C -optc-O2
