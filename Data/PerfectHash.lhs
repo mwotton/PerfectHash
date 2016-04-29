@@ -1,15 +1,21 @@
-> {-# LANGUAGE ForeignFunctionInterface, ScopedTypeVariables, EmptyDataDecls, BangPatterns, TypeSynonymInstances, FlexibleInstances #-}
+> {-# LANGUAGE ForeignFunctionInterface #-}
+> {-# LANGUAGE ScopedTypeVariables #-}
+> {-# LANGUAGE EmptyDataDecls #-}
+> {-# LANGUAGE BangPatterns #-}
+> {-# LANGUAGE TypeSynonymInstances #-}
+> {-# LANGUAGE FlexibleInstances #-}
+> {-# LANGUAGE FlexibleContexts #-}
 
 > module Data.PerfectHash ( PerfectHash, fromList, lookup, lookupByIndex ) where
 >
 > import Data.Array.Unsafe (unsafeFreeze)
 > import System.IO.Unsafe (unsafePerformIO)
 > import Data.Array
-> import Data.Array.IO (newArray_,writeArray,IOArray)
+> import Data.Array.IO (newArray, newArray_,writeArray,IOArray)
 > import Foreign(Ptr)
 > import Foreign.C.String
 > import Foreign.C.Types
-> import Foreign.Marshal.Array
+> import Foreign.Marshal.Array ()
 > import Prelude hiding (lookup)
 > import qualified Data.ByteString.Char8 as S
 > import qualified Data.ByteString.Unsafe as Unsafe
@@ -19,7 +25,8 @@
 > import Data.Digest.Adler32 (adler32)
 > import Control.Monad(guard, liftM)
 > import GHC.Arr (unsafeAt)
- 
+> import Data.Monoid
+
 Arguably the FFI stuff should be in a separate file, but let's keep it simple for the moment.
 
 > foreign import ccall unsafe "cmph.h cmph_search" c_cmph_search :: Ptr ForeignHash -> CString -> CInt -> CULong
@@ -67,7 +74,7 @@ is this even a sane thing to do?
 This could do with being broken up a little, probably
 
 
-> fromList :: Show a => [(S.ByteString, a)] -> PerfectHash a
+> fromList :: (Show a) => [(S.ByteString, a)] -> PerfectHash a
 > fromList ls = unsafePerformIO $ do
 >                   (fodder,cstr_ptrs) <- prepareCPtrs
 >                   cmph <- withStorableArray fodder $ \ptr -> c_build_hash ptr (fromIntegral len)
@@ -87,7 +94,7 @@ This could do with being broken up a little, probably
 >                   return (fodder, cstr_ptrs)
 >
 >         buildArray cmph cstr_ptrs = do
->                   arr <- newArray_ (fromIntegral 0, fromIntegral len - 1) :: IO (IOArray Word32 a)
+>                   arr <- (newArray_ (fromIntegral 0, fromIntegral len - 1) ) :: IO (IOArray Word32 a)
 >                   mapM_ (\(cl@(cstr,len),val) -> writeArray arr (raw_hashfunc cmph cl) (val,cstr)) $ cstr_ptrs
 >                   -- we created it, we can do what we like with it...
 >                   unsafeFreeze arr

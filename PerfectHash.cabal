@@ -1,5 +1,5 @@
 Name:           PerfectHash
-Version:        0.1.4
+Version:        0.1.5
 Cabal-Version:  >= 1.6
 License:	BSD3
 License-File:   LICENSE
@@ -24,7 +24,7 @@ Library
         c-sources: stub.c
         includes: stub.h
         extra-libraries: cmph
-        build-depends:  base >=4.5 && <4.8,
+        build-depends:  base >=4.5 && <5.2,
                         containers,
                         bytestring,
                         digest,

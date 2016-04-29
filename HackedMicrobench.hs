@@ -1,4 +1,5 @@
-{-# LANGUAGE OverlappingInstances, FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE OverlappingInstances #-}
 -- microbench, a tiny microbenchmarking library for Haskell.
 -- Copyright (C) 2008 Evan Martin <martine@danga.com>
 --   hacked ever so slightly by mwotton@gmail.com in the interests
@@ -39,15 +40,15 @@ module HackedMicrobench (
   Microbenchable
 ) where
 
-import Control.Exception
-import Debug.Trace
-import Data.IORef
-import Data.List
-import Data.Time.Clock
-import Data.Typeable
-import Control.Concurrent
-import System.IO
-import Numeric
+import           Control.Concurrent
+import           Control.Exception
+import           Data.IORef
+import           Data.List
+import           Data.Time.Clock
+import           Data.Typeable
+import           Debug.Trace
+import           Numeric
+import           System.IO
 
 -- Want to handle:
 --   Int -> a    => ok
@@ -102,4 +103,3 @@ microbench desc f = do
     if delta > microbenchTime
       then do return (realToFrac delta / realToFrac repeats)
       else probe (repeats * 2)
-
