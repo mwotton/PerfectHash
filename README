@@ -1,5 +1,4 @@
-This is a thin haskell wrapper around the CMPH library, obtainable at http://cmph.sf.net.
-I assume you have it installed in /usr/local/lib.
+This is an immutable hashtable built on cmph.
 
 The motivation is mostly speed, and wren thornton's bytestring-trie seems to be the main competition:
 
