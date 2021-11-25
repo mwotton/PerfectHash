@@ -1,19 +1,19 @@
 Name:           perfecthash
 Version:        0.2.0
 Cabal-Version:  >= 1.10
-License:	BSD3
+License:        BSD3
 License-File:   LICENSE
 Build-Type:     Simple
-Author:		Mark Wotton <mwotton@gmail.com>
-Maintainer:	Mark Wotton <mwotton@gmail.com>
-Category:	Data, Data Structures
-Stability:	Experimental
+Author:         Mark Wotton <mwotton@gmail.com>
+Maintainer:     Mark Wotton <mwotton@gmail.com>
+Category:       Data, Data Structures
+Stability:      Experimental
 extra-source-files:  README, TODO
-bug-reports:	mailto:mwotton@gmail.com
-Synopsis:	A perfect hashing library for mapping bytestrings to values.
+bug-reports:    mailto:mwotton@gmail.com
+Synopsis:       A perfect hashing library for mapping bytestrings to values.
 Description:    A perfect hashing library for mapping bytestrings to values.
-		Insertion is not supported (by design): Only fromList
-		and lookup operations are supported.
+                Insertion is not supported (by design): Only fromList
+                and lookup operations are supported.
 
                 CI at https://travis-ci.org/mwotton/PerfectHash
 Library
@@ -45,6 +45,7 @@ test-suite cmph-test
                      , containers
 
 Benchmark bench-foo
+    default-language: Haskell2010
     type:       exitcode-stdio-1.0
     main-is:        Main.hs
     hs-source-dirs: benchmark
