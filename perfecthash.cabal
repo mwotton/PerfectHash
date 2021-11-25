@@ -24,7 +24,7 @@ Library
 --        extra-libraries: cmph
         build-depends:  base >=4.5 && <5.2,
                         containers,
-                        cmph,
+                        cmph >=0.0.2 && <0.1,
                         bytestring,
                         array,
                         time
@@ -36,7 +36,7 @@ test-suite cmph-test
   hs-source-dirs:      test
   main-is:             Main.hs
   other-modules:       Data.PerfectHashSpec
-  build-depends:       cmph
+  build-depends:       cmph >=0.0.2 && <0.1
                      , base
                      , hspec
                      , QuickCheck
@@ -58,6 +58,7 @@ Benchmark bench-foo
                   , perfecthash
                   , unordered-containers
                   , deepseq
+
 source-repository head
   type: git
   location: http://github.com/mwotton/PerfectHash.git
