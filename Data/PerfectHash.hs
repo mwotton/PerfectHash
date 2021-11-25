@@ -47,5 +47,5 @@ lookup !bs !ph  = guard check >> return e
     where index = {-# SCC "hash_only" #-} unsafePerformIO $ CMPH.hash (computedHash ph) bs
           (!low, !high) = bounds arr
           !arr = store ph
-          !e = {-# SCC array_lookup #-} arr ! index
+          e = {-# SCC array_lookup #-} arr ! index
           !check = {-# SCC "check" #-} low <= index && high >= index
